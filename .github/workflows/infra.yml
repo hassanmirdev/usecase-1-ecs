@@ -1,0 +1,74 @@
+name: Working with Multiple Environments
+on:
+  workflow_dispatch:
+jobs:
+  terraform-workspace:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: 'main'
+
+      # Set up Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2.0.3
+        with:
+          terraform_version: 1.10.3  # 
+    
+      # Configure AWS Credentials    
+      - name: AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: "us-east-1"
+
+     
+     # Terraform validate
+      - name: Run Terraform Validate
+        run: |                                
+         cd /infra/environments/dev
+         rm -rf .terraform
+         terraform init -var-file="dev.tfvars"
+         terraform validate -var-file="dev.tfvars" # Validate the Terraform configuration
+
+      - name: Configure Git
+        run: |
+          git config --global user.email "hassan.mirsf@gmail.com"
+          git config --global user.name "hassanmirdev"
+      
+      # Initialize Terraform
+      - name: Initialize Terraform
+        run: |
+         cd /infra/environments/dev
+         rm -rf .terraform
+         terraform init -var-file="dev.tfvars"
+         terraform fmt -var-file="dev.tfvars"
+     
+     # Generate Terraform Plan
+      - name: Generate Terraform Plan
+        run: | 
+         cd /infra/environments/dev
+         terraform plan -var-file="dev.tfvars"
+        # run: terraform plan -out=tfplan
+
+      
+      #  # Generate Markdown with Terraform Docs
+      # - name: Generate Markdown with Terraform Docs
+      #   uses: terraform-docs/gh-actions@v1.3.0
+      #   with:
+      #     working-dir: .
+      #     output-file: README.md
+      #     output-method: inject
+      #     git-push: "true"
+      #     git-push-user-name: "hassanmirdev"
+      #     git-push-user-email: "hassan.mirsf@gmail.com"
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      # Apply the Terraform configuration to AWS
+      - name: Apply Terraform Configuration
+        run: |
+         cd /infra/environments/dev
+         terraform apply -var-file="dev.tfvars" -auto-approve
