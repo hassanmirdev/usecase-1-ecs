@@ -1,8 +1,8 @@
-name: Working with Multiple Environments
+name: Provision infra on AWS
 on:
   workflow_dispatch:
 jobs:
-  terraform-workspace:
+  prov-infra:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
