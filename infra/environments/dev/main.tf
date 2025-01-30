@@ -19,3 +19,7 @@ module "ecs" {
   public_subnet=module.vpc.public_subnet
 
 }
+
+module "ecr" {
+ source = "../../modules/ecr"
+}
